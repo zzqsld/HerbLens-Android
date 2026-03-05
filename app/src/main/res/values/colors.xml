@@ -1,0 +1,7 @@
+<resources>
+    <color name="surfaceBg">#FFFDF7</color>
+    <color name="ink">#2E271C</color>
+    <color name="inkSoft">#6D5A43</color>
+    <color name="brand">#8B5E34</color>
+    <color name="brandOn">#FFFFFF</color>
+</resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">中草药识别</string>
+    <string name="selected_image">已选择图片</string>
+</resources>

@@ -1,0 +1,132 @@
+package com.cnpurse.herb
+
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.cnpurse.herb.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+class MainActivity : AppCompatActivity() {
+    private val githubUrl = "https://github.com/zzqsld/HerbLens-Android"
+    private lateinit var binding: ActivityMainBinding
+    private var selectedBitmap: Bitmap? = null
+    private var classifier: HerbClassifier? = null
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri == null) return@registerForActivityResult
+
+        contentResolver.takePersistableUriPermission(
+            uri,
+            android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+
+        val bitmap = decodeBitmap(uri)
+        if (bitmap == null) {
+            showToast("读取图片失败，请重试")
+            return@registerForActivityResult
+        }
+
+        selectedBitmap = bitmap
+        binding.previewImage.setImageBitmap(bitmap)
+        binding.resultText.text = "已选择图片，点击“开始识别”"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.selectImageButton.setOnClickListener {
+            pickImageLauncher.launch(arrayOf("image/*"))
+        }
+
+        binding.predictButton.setOnClickListener {
+            runPrediction()
+        }
+
+        binding.githubButton.setOnClickListener {
+            openGithubRepo()
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                classifier = HerbClassifier(applicationContext)
+                withContext(Dispatchers.Main) {
+                    binding.resultText.text = "模型已就绪，请选择图片开始识别"
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    binding.resultText.text = "模型加载失败：${e.message}\n请先按照 README 导出并放入 ONNX 模型文件"
+                }
+            }
+        }
+    }
+
+    private fun runPrediction() {
+        val bitmap = selectedBitmap
+        val model = classifier
+        if (bitmap == null) {
+            showToast("请先选择一张图片")
+            return
+        }
+        if (model == null) {
+            showToast("模型还未准备好")
+            return
+        }
+
+        binding.progressBar.visibility = android.view.View.VISIBLE
+        binding.predictButton.isEnabled = false
+
+        lifecycleScope.launch(Dispatchers.Default) {
+            try {
+                val prediction = model.predict(bitmap)
+                val confidencePercent = "%.2f".format(prediction.confidence * 100)
+                withContext(Dispatchers.Main) {
+                    binding.resultText.text = "识别结果：${prediction.label}\n识别度：${confidencePercent}%"
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    binding.resultText.text = "识别失败：${e.message}"
+                }
+            } finally {
+                withContext(Dispatchers.Main) {
+                    binding.progressBar.visibility = android.view.View.GONE
+                    binding.predictButton.isEnabled = true
+                }
+            }
+        }
+    }
+
+    private fun decodeBitmap(uri: Uri): Bitmap? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(contentResolver, uri)
+                ImageDecoder.decodeBitmap(source)
+            } else {
+                @Suppress("DEPRECATION")
+                MediaStore.Images.Media.getBitmap(contentResolver, uri)
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun openGithubRepo() {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+        startActivity(intent)
+    }
+}

@@ -1,0 +1,17 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+app/build/
+
+# Generated model artifacts (do not track large binaries)
+artifacts/
+app/src/main/assets/model/chinese_medicine_vit.onnx
+
+# Upstream cloned source repo (kept locally for reference)
+model_src/
