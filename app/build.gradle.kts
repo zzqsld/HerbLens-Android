@@ -39,6 +39,16 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    // Build ABI-specific APKs and avoid universal APK carrying all ABIs.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
 }
 
 dependencies {
