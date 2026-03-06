@@ -77,3 +77,25 @@ python scripts/export_to_onnx.py
 - 若你重新训练了模型，请重新执行 `scripts/export_to_onnx.py` 并替换 assets 中三个文件。
 - 首次加载模型会稍慢（会将 ONNX 从 assets 拷贝到应用内部目录）。
 - 模型版权与使用限制请以原始开源仓库说明为准。
+- APK 签名别名（keystore alias）：`herblens`
+
+## 8. 图标裁剪预览工具
+
+如果你觉得图标被拉伸，可使用可视化裁剪工具自己框选保留区域：
+
+```bash
+python scripts/icon_cropper.py
+```
+
+使用方式：
+1. 打开后可直接加载项目根目录下的 `1772753925687.png`（或点击 `Open Image` 选图）。
+2. 在左侧图上鼠标拖拽，框选要保留的正方形区域。
+3. 右侧会实时预览方形和圆形效果。
+4. 点击 `Save Icon`，会覆盖输出到：
+	`app/src/main/res/drawable-nodpi/ic_launcher_source.png`
+5. 然后重新打包安装：
+
+```bash
+./gradlew.bat :app:assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```

@@ -7,6 +7,12 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.text.style.ForegroundColorSpan
+import android.text.TextPaint
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -54,9 +60,7 @@ class MainActivity : AppCompatActivity() {
             runPrediction()
         }
 
-        binding.githubButton.setOnClickListener {
-            openGithubRepo()
-        }
+        setupAuthorLink()
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -111,7 +115,10 @@ class MainActivity : AppCompatActivity() {
         return try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(contentResolver, uri)
-                ImageDecoder.decodeBitmap(source)
+                ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                    // Force software bitmap so getPixels() works during preprocessing.
+                    decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                }
             } else {
                 @Suppress("DEPRECATION")
                 MediaStore.Images.Media.getBitmap(contentResolver, uri)
@@ -123,6 +130,37 @@ class MainActivity : AppCompatActivity() {
 
     private fun showToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupAuthorLink() {
+        val full = "作者：zzqsld"
+        val clickableName = "zzqsld"
+        val start = full.indexOf(clickableName)
+        val end = start + clickableName.length
+        val spannable = SpannableString(full)
+
+        val linkSpan = object : ClickableSpan() {
+            override fun onClick(widget: android.view.View) {
+                openGithubRepo()
+            }
+
+            override fun updateDrawState(ds: TextPaint) {
+                ds.color = android.graphics.Color.parseColor("#1E6BFF")
+                ds.isUnderlineText = true
+            }
+        }
+
+        spannable.setSpan(linkSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        spannable.setSpan(
+            ForegroundColorSpan(android.graphics.Color.parseColor("#1E6BFF")),
+            start,
+            end,
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        binding.authorLinkText.text = spannable
+        binding.authorLinkText.movementMethod = LinkMovementMethod.getInstance()
+        binding.authorLinkText.highlightColor = android.graphics.Color.TRANSPARENT
     }
 
     private fun openGithubRepo() {

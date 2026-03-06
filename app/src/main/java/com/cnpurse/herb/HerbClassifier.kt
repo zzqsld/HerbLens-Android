@@ -16,6 +16,13 @@ class HerbClassifier(private val context: Context) {
     private val session: OrtSession
     private val labels: List<String>
     private val config: PreprocessConfig
+    private val labelZhMap: Map<String, String> = mapOf(
+        "baihe" to "百合",
+        "dangshen" to "党参",
+        "gouqi" to "枸杞",
+        "huaihua" to "槐花",
+        "jinyinhua" to "金银花"
+    )
 
     data class Prediction(val label: String, val confidence: Float)
 
@@ -42,10 +49,19 @@ class HerbClassifier(private val context: Context) {
                 val logits = (output[0].value as Array<FloatArray>)[0]
                 val probs = softmax(logits)
                 val bestIndex = probs.indices.maxByOrNull { probs[it] } ?: 0
-                val label = labels.getOrElse(bestIndex) { "未知" }
-                return Prediction(label, probs[bestIndex])
+                val rawLabel = labels.getOrElse(bestIndex) { "未知" }
+                val zhLabel = toChineseLabel(rawLabel)
+                return Prediction(zhLabel, probs[bestIndex])
             }
         }
+    }
+
+    private fun toChineseLabel(rawLabel: String): String {
+        val normalized = rawLabel.trim().lowercase()
+            .replace(" ", "")
+            .replace("_", "")
+            .replace("-", "")
+        return labelZhMap[normalized] ?: rawLabel
     }
 
     private fun preprocess(bitmap: Bitmap, cfg: PreprocessConfig): FloatArray {

@@ -69,17 +69,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/selectImageButton" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/githubButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="GitHub 项目"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/predictButton" />
-
         <TextView
             android:id="@+id/resultText"
             android:layout_width="0dp"
@@ -92,7 +81,7 @@
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/githubButton" />
+            app:layout_constraintTop_toBottomOf="@id/predictButton" />
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -101,6 +90,19 @@
             android:layout_marginTop="12dp"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/resultText"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/authorLinkText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:layout_marginBottom="8dp"
+            android:text="作者：zzqsld"
+            android:textColor="@color/inkSoft"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
