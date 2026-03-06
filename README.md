@@ -1,101 +1,121 @@
-# 中草药本地识别 Android APP（离线）
+# HerbLens-Android
 
-GitHub 仓库：`https://github.com/zzqsld/HerbLens-Android`
-模型来源（开源仓库）：`https://openi.pcl.ac.cn/cubeai-model-zoo/hf_cv_chinese_medicine_classification`
+大家好，我是这个项目的作者 `zzqsld`。
 
-基于你提供的模型仓库 `hf_cv_chinese_medicine_classification`，此项目实现了一个可在安卓手机运行的本地识别 APP：
+这个项目是一个可离线运行的中草药识别 Android APP。你在手机上选一张中草药图片，就能看到识别结果和识别度。
+
+GitHub 项目地址：`https://github.com/zzqsld/HerbLens-Android`
+
+## 项目能做什么
+
 - 从相册或存储空间选择图片
-- 本地 ONNX 推理（不依赖后端）
-- 显示识别名称和识别度
+- 本地离线识别（不依赖服务器）
+- 显示中草药名称（中文）和识别度
+- 支持点击作者链接跳转 GitHub
 
-支持类别（5类）：
+当前模型类别（5类）：
 - 百合
 - 党参
 - 枸杞
 - 槐花
 - 金银花
 
-## 1. 项目结构
+## 一、先准备模型文件
 
-- `app/`：安卓应用代码（Kotlin + ONNX Runtime）
-- `scripts/export_to_onnx.py`：把原始 HuggingFace ViT 模型导出成 ONNX
-- `scripts/requirements-export.txt`：导出模型所需 Python 依赖
+本仓库不直接托管大模型文件，请从开源来源获取并在本地导出。
 
-## 2. 模型获取方式（使用开源仓库链接）
+模型来源：
+- OpenI：`https://openi.pcl.ac.cn/cubeai-model-zoo/hf_cv_chinese_medicine_classification`
+- HuggingFace 镜像：`https://hf-mirror.com/Bazaar/cv_chinese_medicine_classification`
 
-本仓库不直接托管大模型文件，模型请从上面的开源仓库来源获取并本地导出。
-
-参考链接：
-- OpenI 模型仓库：`https://openi.pcl.ac.cn/cubeai-model-zoo/hf_cv_chinese_medicine_classification`
-- HuggingFace 镜像模型：`https://hf-mirror.com/Bazaar/cv_chinese_medicine_classification`
-
-在项目根目录执行导出：
+在项目根目录执行：
 
 ```bash
 pip install -r scripts/requirements-export.txt
 python scripts/export_to_onnx.py
 ```
 
-执行后会在本地生成：
+导出后会生成：
 - `artifacts/chinese_medicine_vit.onnx`
 - `artifacts/labels.json`
 - `artifacts/preprocess_config.json`
 
-## 3. 拷贝到安卓 assets
-
-把这三个文件复制到：
-
+把它们复制到：
 - `app/src/main/assets/model/chinese_medicine_vit.onnx`
 - `app/src/main/assets/model/labels.json`
 - `app/src/main/assets/model/preprocess_config.json`
 
-说明：模型文件为本地生成文件，不建议直接提交到 Git 仓库。
+## 二、在 Android Studio 运行
 
-## 4. 在 Android Studio 运行
+1. 打开项目目录：`D:\cn-purse`
+2. 等待 Gradle 同步完成
+3. 连接手机（或启动模拟器）
+4. 点击 Run
 
-1. 用 Android Studio 打开项目根目录。
-2. 等待 Gradle 同步完成。
-3. 连接安卓手机（或启动模拟器）。
-4. 点击 Run。
+如果只是想安装包：
 
-## 5. 使用方式
+```bash
+./gradlew.bat :app:assembleDebug
+```
 
-1. 打开 APP，点击“选择图片”。
-2. 从相册或文件管理器选择一张中草药图片。
-3. 点击“开始识别”。
-4. 页面显示“识别结果 + 识别度(%)”。
+APK 路径：
+- `app/build/outputs/apk/debug/app-debug.apk`
 
-## 6. 关键实现说明
+## 三、APP 使用教程
 
-- 图片选择：`ActivityResultContracts.OpenDocument`
-- 本地推理：`ai.onnxruntime:onnxruntime-android`
-- 预处理：`224x224`、RGB、按 `preprocess_config.json` 的 mean/std 归一化
-- 输出处理：对 logits 做 softmax，取 Top-1
+1. 打开 APP
+2. 点击 `选择图片`
+3. 从相册或文件管理器选择中草药图片
+4. 点击 `开始识别`
+5. 查看结果：`识别结果 + 识别度`
 
-## 7. 注意事项
+## 四、图标调整（可选）
 
-- 若你重新训练了模型，请重新执行 `scripts/export_to_onnx.py` 并替换 assets 中三个文件。
-- 首次加载模型会稍慢（会将 ONNX 从 assets 拷贝到应用内部目录）。
-- 模型版权与使用限制请以原始开源仓库说明为准。
-- APK 签名别名（keystore alias）：`herblens`
-
-## 8. 图标裁剪预览工具
-
-如果你觉得图标被拉伸，可使用可视化裁剪工具自己框选保留区域：
+如果图标显示不理想，可以使用我写的可视化裁剪工具：
 
 ```bash
 python scripts/icon_cropper.py
 ```
 
-使用方式：
-1. 打开后可直接加载项目根目录下的 `1772753925687.png`（或点击 `Open Image` 选图）。
-2. 在左侧图上鼠标拖拽，框选要保留的正方形区域。
-3. 右侧会实时预览方形和圆形效果。
-4. 点击 `Save Icon`，会覆盖输出到：
-	`app/src/main/res/drawable-nodpi/ic_launcher_source.png`
-5. 然后重新打包安装：
+使用步骤：
+1. 默认会加载根目录下 `1772753925687.png`
+2. 鼠标拖拽选择保留区域
+3. 右侧实时看方形/圆形预览
+4. 点击 `Save Icon`
+
+输出位置：
+- `app/src/main/res/drawable-nodpi/ic_launcher_source.png`
+
+保存后重新打包安装：
 
 ```bash
 ./gradlew.bat :app:assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
+
+## 五、发布签名说明
+
+签名别名（keystore alias）：`herblens`
+
+建议你保管好：
+- keystore 文件
+- keystore 密码
+- alias 和 key 密码
+
+后续更新同一个 APP 必须使用同一套签名信息。
+
+## 六、常见问题
+
+- 识别失败提示 `Config#HARDWARE bitmaps`：
+已在代码中修复为软件位图解码，重新安装新版 APK 即可。
+
+- 显示拼音标签（如 `dangshen`）：
+已在代码中做了拼音到中文映射，当前会显示中文名（如 `党参`）。
+
+- 安装失败：
+先执行 `adb devices` 确认手机已连接并授权 USB 调试。
+
+## 许可证与声明
+
+- 代码许可证以仓库 `LICENSE` 为准。
+- 模型版权与使用限制请以原始开源模型仓库说明为准。
