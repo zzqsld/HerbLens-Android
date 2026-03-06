@@ -94,9 +94,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.Default) {
             try {
                 val prediction = model.predict(bitmap)
-                val confidencePercent = "%.2f".format(prediction.confidence * 100)
                 withContext(Dispatchers.Main) {
-                    binding.resultText.text = "识别结果：${prediction.label}\n识别度：${confidencePercent}%"
+                    binding.resultText.text = buildResultMessage(prediction.label, prediction.confidence)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -130,6 +129,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun showToast(msg: String) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun buildResultMessage(label: String, confidence: Float): String {
+        val confidencePercent = "%.2f".format(confidence * 100)
+        return when {
+            confidence < 0.50f -> {
+                "未识别到中草药\n最高置信度：${confidencePercent}%"
+            }
+
+            confidence < 0.98f -> {
+                "这可能是：${label}\n识别度：${confidencePercent}%\n通常置信度低于98%结果不准确。"
+            }
+
+            else -> {
+                "识别结果：${label}\n识别度：${confidencePercent}%\n结果仅供参考。"
+            }
+        }
     }
 
     private fun setupAuthorLink() {
